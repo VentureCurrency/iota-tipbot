@@ -135,7 +135,7 @@ def balance(bot, update):
             api = Iota('https://field.carriota.com:443', seed)
             gb_result = api.get_account_data()
             balance = gb_result['balance']
-            # Send the account balance in Nano to the user:
+            # Send the account balance in IOTA to the user:
             bot.send_message(chat_id=update.message.chat_id, text='Your balance is: \n\n' +
                                                                   str(balance) + ' iota')
         else:
@@ -181,7 +181,6 @@ def tip(bot, update):
                 else:
                     # Get the amount to send:
                     amount = update.message.text.split(' ')[2]
-
                     recipient_info = username_check(recipient_username)
 
                     if not recipient_info:
@@ -203,68 +202,110 @@ def tip(bot, update):
                     else:
                         new_recipient = False
 
-
                     # Get the address of the recipient
                     recipient_seed = recipient_info['seed']
                     api = Iota('https://field.carriota.com:443', recipient_seed)
                     gen_result = api.get_new_addresses(count = None, index = None, checksum = True)['addresses'][0]
-                    receipient_address = str(gen_result)
-                    print ('{}\n\n'.format(gen_result))
-                    # Get the balance of the client to ensure that they have enough Nano in their account
+                    recipient_address = str(gen_result)
+
+                    # Get the balance of the client to ensure that they have enough IOTA in their account
                     send_seed = user_info['seed']
                     api = Iota('https://field.carriota.com:443', send_seed)
                     gb_result = api.get_account_data()
-                    print ('{}\n\n'.format(gb_result))
+
                     if int(amount) <= int(gb_result['balance']):
-                        print('sending...')
+                        # Send transaction to recipient address
                         api = Iota('https://field.carriota.com:443', send_seed)
-                        result = api.send_transfer(
-                            depth = 3,
-                            transfers = [
-                                ProposedTransaction(
-                                    # Recipient of the transfer
-                                    address =
-                                        Address(
-                                            gen_result,
-                                        ),
-                                    # Amount of IOTA to transfer
-                                    value = 0,
-                                    # Optional tag to attach to the transfer.
-                                    tag = Tag(b'IOTATIPBOT'),
-                                    # Optional message to include with the transfer.
-                                    message = TryteString.from_string('This is a tip sent from IOTA Tipbot.'),
-                                ),
-                            ],
-                        )
-                        print (result)
+                        result = api.send_transfer(depth = 3, transfers = [ProposedTransaction(address = Address(gen_result,), value = int(amount), tag = Tag(b'IOTATIPBOT'), message = TryteString.from_string('This is a tip sent from IOTA Tipbot.'), ), ], )
+
+                        # Notify the user that transaction is sent
                         logger.info('User ' + username + ' sent user ' + recipient_username + ' (address ' + recipient_address + ') ' + amount +' iota')
                         bot.send_message(chat_id=update.message.chat_id, text='You have successfully tipped @' + recipient_username + ' with ' + amount + ' iota\n\n'
                                                                               'Thank you for using the IOTA Tipbot! \n\n'
                                                                               'Let @' + recipient_username + ' know that you have tipped them by sending them the message below.')
-                        bot.send_message(chat_id=update.message.chat_id, text='@' + recipient_username + ' has been tipped IOTA ' + amount + ' using the IOTA Tipbot (@nano_tip_bot) courtesy of @' + username + '.')
+                        bot.send_message(chat_id=update.message.chat_id, text='@' + recipient_username + ' has been tipped IOTA ' + amount + ' using the IOTA Tipbot (@iota_tip_bot) courtesy of @' + username + '.')
                     else:
                         bot.send_message(chat_id=update.message.chat_id, text='Not enough funds to send ' + amount + ' iota\n\n'
                                                                               'Please use /balance to check your current balance.')
 
 
+def withdraw(bot, update):
+    # Attempt to fetch the username of the client
+    username = str(update.message.from_user.username)
+    if username == 'None':
+        # If the username is 'None', the client has not set a username and thus cannot register
+        username_error(bot, update)
+    else:
+        user_info = username_check(username)
+
+        if not user_info:
+            # If the user does not exist in the database they must register before checking their balance
+            bot.send_message(chat_id=update.message.chat_id, text='Tipbot can\'t identify your username.\n\n'
+                                                                  'Either you haven\'t deposit yet or changed username.\n\n'
+                                                                  'Please use /deposit to get the address that can store your funds.\n\n'
+                                                                  'Or use /recover to retrieve your previous username\'s address.')
+        else:
+            # If the user has only entered /withdraw, notify them of the correct formatting:
+            if len(update.message.text.split(' ')) == 1:
+                bot.send_message(chat_id=update.message.chat_id, text='Incorrect format. \n\n'
+                                                                      'Please use /withdraw <address> <amount>')
+            # Check to ensure that the withdraw command has the correct format - "/withdraw address amount"
+            elif len(update.message.text.split(' ')) != 3:
+                bot.send_message(chat_id=update.message.chat_id, text='Incorrect format. \n\n'
+                                                                      'Please use /withdraw <address> <amount>')
+            else:
+                # Check to see if the withdraw address is valid
+                withdraw_address = update.message.text.split(' ')[1]
+                try:
+                    recipient_address = Address(withdraw_address).with_valid_checksum()
+                except:
+                    bot.send_message(chat_id=update.message.chat_id, text='Incorrect format. \n\n'
+                                                                          'Address you typed has invalid characters.')
+                else:
+                    # Get the balance of the client
+                    send_seed = user_info['seed']
+                    api = Iota('https://field.carriota.com:443', send_seed)
+                    gb_result = api.get_account_data()
+                    # Get the amount to send:
+                    amount = update.message.text.split(' ')[2]
+
+                    if int(amount) <= int(gb_result['balance']):
+                        # Send transaction to recipient address
+                        api = Iota('https://field.carriota.com:443', send_seed)
+                        result = api.send_transfer(depth = 3, transfers = [ProposedTransaction(address = Address(recipient_address,), value = int(amount), tag = Tag(b'IOTATIPBOT'), message = TryteString.from_string('This is a withdraw sent from IOTA Tipbot.'), ), ], )
+
+                        # Notify the user that transaction is sent
+                        logger.info('User ' + username + ' withdraw ' + amount + 'iota to address ' + str(recipient_address))
+                        bot.send_message(chat_id=update.message.chat_id, text='You have successfully withdrawed ' + amount + ' iota\n\n'
+                                                                              'Thank you for using the IOTA Tipbot!')
+                    else:
+                        bot.send_message(chat_id=update.message.chat_id, text='Not enough funds to withdraw ' + amount + ' iota\n\n'
+                                                                              'Please use /balance to check your current balance.')
 
 
-start_handler = CommandHandler('start', start)
-help_handler = CommandHandler('help', help)
-price_handler = CommandHandler('price', price)
-donate_handler = CommandHandler('donate', donate)
-balance_handler = CommandHandler('balance', balance)
-deposit_handler = CommandHandler('deposit', deposit)
-tip_handler = CommandHandler('tip', tip)
-#withdraw_handler = CommandHandler('withdraw', withdraw)
+def main():
+    print ('Initializing...')
 
-dispatcher.add_handler(start_handler)
-dispatcher.add_handler(help_handler)
-dispatcher.add_handler(price_handler)
-dispatcher.add_handler(donate_handler)
-dispatcher.add_handler(balance_handler)
-dispatcher.add_handler(deposit_handler)
-dispatcher.add_handler(tip_handler)
-#dispatcher.add_handler(withdraw_handler)
+    start_handler = CommandHandler('start', start)
+    help_handler = CommandHandler('help', help)
+    price_handler = CommandHandler('price', price)
+    donate_handler = CommandHandler('donate', donate)
+    balance_handler = CommandHandler('balance', balance)
+    deposit_handler = CommandHandler('deposit', deposit)
+    tip_handler = CommandHandler('tip', tip)
+    withdraw_handler = CommandHandler('withdraw', withdraw)
 
-updater.start_polling()
+    dispatcher.add_handler(start_handler)
+    dispatcher.add_handler(help_handler)
+    dispatcher.add_handler(price_handler)
+    dispatcher.add_handler(donate_handler)
+    dispatcher.add_handler(balance_handler)
+    dispatcher.add_handler(deposit_handler)
+    dispatcher.add_handler(tip_handler)
+    dispatcher.add_handler(withdraw_handler)
+
+    print ('Done!')
+    updater.start_polling()
+
+if __name__ == '__main__':
+    main()
