@@ -1,3 +1,4 @@
 api_token = ''
 seed = b'SEED9GOESSEED9GOESSEED9GOESSEED9GOESSEED9GOESSEED9GOESSEED9GOESSEED9GOESSEED9GOES'
 db_name = 'tipbot.db'
+node = 'http://localhost:14265'
