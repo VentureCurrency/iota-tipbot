@@ -103,7 +103,7 @@ def deposit(bot, update):
 
             # Generate new seed
             seed = ''.join(secrets.choice(string.ascii_uppercase + "9") for _ in range(81))
-            api = Iota('https://field.carriota.com:443', seed)
+            api = Iota(node, seed)
             gen_result = api.get_new_addresses(count = None, index = None, checksum = True)['addresses'][0]
             address = str(gen_result)
             # Create recovery key (UUID4 token)
@@ -133,7 +133,7 @@ def balance(bot, update):
             # Get address of client:
             seed = user_info['seed']
             # Get the account balance of the client:
-            api = Iota('https://field.carriota.com:443', seed)
+            api = Iota(node, seed)
             gb_result = api.get_account_data()
             balance = gb_result['balance']
             # Send the account balance in IOTA to the user:
@@ -205,18 +205,18 @@ def tip(bot, update):
 
                     # Get the address of the recipient
                     recipient_seed = recipient_info['seed']
-                    api = Iota('https://field.carriota.com:443', recipient_seed)
+                    api = Iota(node, recipient_seed)
                     gen_result = api.get_new_addresses(count = None, index = None, checksum = True)['addresses'][0]
                     recipient_address = str(gen_result)
 
                     # Get the balance of the client to ensure that they have enough IOTA in their account
                     send_seed = user_info['seed']
-                    api = Iota('https://field.carriota.com:443', send_seed)
+                    api = Iota(node, send_seed)
                     gb_result = api.get_account_data()
 
                     if int(amount) <= int(gb_result['balance']):
                         # Send transaction to recipient address
-                        api = Iota('https://field.carriota.com:443', send_seed)
+                        api = Iota(node, send_seed)
                         result = api.send_transfer(depth = 3, transfers = [ProposedTransaction(address = Address(gen_result,), value = int(amount), tag = Tag(b'IOTATIPBOT'), message = TryteString.from_string('This is a tip sent from IOTA Tipbot.'), ), ], )
 
                         # Notify the user that transaction is sent
@@ -265,14 +265,14 @@ def withdraw(bot, update):
                 else:
                     # Get the balance of the client
                     send_seed = user_info['seed']
-                    api = Iota('https://field.carriota.com:443', send_seed)
+                    api = Iota(node, send_seed)
                     gb_result = api.get_account_data()
                     # Get the amount to send:
                     amount = update.message.text.split(' ')[2]
 
                     if int(amount) <= int(gb_result['balance']):
                         # Send transaction to recipient address
-                        api = Iota('https://field.carriota.com:443', send_seed)
+                        api = Iota(node, send_seed)
                         result = api.send_transfer(depth = 3, transfers = [ProposedTransaction(address = Address(recipient_address,), value = int(amount), tag = Tag(b'IOTATIPBOT'), message = TryteString.from_string('This is a withdraw sent from IOTA Tipbot.'), ), ], )
 
                         # Notify the user that transaction is sent
