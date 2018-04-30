@@ -26,6 +26,7 @@ handler.setLevel(logging.INFO)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 # Setup node connection
+node = config.node
 
 # Setup the initial IOTA market statistics
 market_data = requests.get('https://api.coinmarketcap.com/v1/ticker/iota/')
