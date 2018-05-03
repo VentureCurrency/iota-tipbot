@@ -93,7 +93,10 @@ def deposit(bot, update):
         user_table = db['user']
 
         if user_info:
-            address = user_info['address']
+            seed = user_info['seed']
+            api = Iota(node, seed)
+            gen_result = api.get_new_addresses(count = None, index = None, checksum = True)['addresses'][0]
+            address = str(gen_result)
             # If the user already exists in the database, retrieve their address from db
             bot.send_message(chat_id=update.message.chat_id, text='Your are already registered \n\n'
                                                                   'Here is your deposit address: ' +
