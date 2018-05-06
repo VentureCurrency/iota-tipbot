@@ -68,7 +68,7 @@ def price(bot, update):
                                                           'Rank: ' + PriceInfo['data']['rank'] + '\n'
                                                           'Price (USD): $' + PriceInfo['data']['quotes']['USD']['price'] + '\n'
                                                           'Market Cap (USD): $' + PriceInfo['data']['quotes']['USD']['market_cap'] + '\n'
-                                                          'Percent Change (24h): ' + PriceInfo['data']['lastupdated'] + '%')
+                                                          'Percent Change (24h): ' + PriceInfo['data']['last_updated'] + '%')
 
 
 def donate(bot, update):
