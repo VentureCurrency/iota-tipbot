@@ -65,10 +65,10 @@ def help(bot, update):
 def price(bot, update):
     # Display the currently storecd info from CoinMarketCap
     bot.send_message(chat_id=update.message.chat_id, text='The current IOTA market stats are: \n'
-                                                          'Rank: ' + PriceInfo[0]['rank'] + '\n'
-                                                          'Price (USD): $' + PriceInfo[0]['price_usd'] + '\n'
-                                                          'Market Cap (USD): $' + PriceInfo[0]['market_cap_usd'] + '\n'
-                                                          'Percent Change (24h): ' + PriceInfo[0]['percent_change_24h'] + '%')
+                                                          'Rank: ' + PriceInfo['data']['rank'] + '\n'
+                                                          'Price (USD): $' + PriceInfo['data']['price_usd'] + '\n'
+                                                          'Market Cap (USD): $' + PriceInfo['data']['market_cap_usd'] + '\n'
+                                                          'Percent Change (24h): ' + PriceInfo['data']['percent_change_24h'] + '%')
 
 
 def donate(bot, update):
