@@ -29,7 +29,7 @@ logger.addHandler(handler)
 node = config.node
 
 # Setup the initial IOTA market statistics
-market_data = requests.get('https://api.coinmarketcap.com/v1/ticker/iota/')
+market_data = requests.get('https://api.coinmarketcap.com/v2/ticker/1720/')
 PriceInfo = market_data.json()
 
 
